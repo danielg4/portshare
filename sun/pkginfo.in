@@ -1,9 +1,9 @@
-PKG=cyclades-ser-cli
+PKG=portshare-ser-cli
 ARCH=sparc
 VERSION=@version@
 CATEGORY=comms
-NAME=cyclades-ser-cli
+NAME=portshare-ser-cli
 DESC=Serial Port Network Redirector
-VENDOR=Cyclades
+VENDOR=portshare
 EMAIL=russell@coker.com.au
 MAXINST=1

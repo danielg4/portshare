@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (C) Cyclades Corporation, 1999-1999. All rights reserved.
+ * Copyright (C) portshare Corporation, 1999-1999. All rights reserved.
  *
  *
  * sock.c
@@ -16,6 +16,7 @@
 # include <sys/ioctl.h>
 # include <fcntl.h>
 # include <netinet/in.h>
+# include <netinet/tcp.h>
 # include <arpa/inet.h>
 # include <netdb.h>
 # include <errno.h>
@@ -25,7 +26,7 @@
 
 # define _TSR_SOCK_
 
-#include "inc/cyclades-ser-cli.h"
+#include "inc/portshare-ser-cli.h"
 #include "inc/system.h"
 #include "inc/tsrio.h"
 #include "inc/sock.h"
@@ -45,12 +46,11 @@
 struct sockaddr_in S_inaddr;
 
 int
-sock_getaddr(char *host, int base, int physport)
+sock_getaddr(char *host, int tcpport)
 {
 
     struct sockaddr_in *sp = &S_inaddr;
     struct hostent *hp;
-    int tcpport;
 
     if ((hp = gethostbyname(host)) != (struct hostent *) NULL) {
 	memcpy((char *) &sp->sin_addr, hp->h_addr, hp->h_length);
@@ -64,7 +64,7 @@ sock_getaddr(char *host, int base, int physport)
 	return (E_PARMINVAL);
     }
 
-    tcpport = base + physport;
+    //tcpport = base + physport;
 
     sp->sin_port = htons(tcpport);
 
@@ -140,6 +140,14 @@ sock_link(int iosize)
 	return (E_FILEIO);
     }
 # endif
+# if defined(TCP_NODELAY)
+#  ifndef SOL_TCP
+#   define SOL_TCP IPPROTO_TCP
+#  endif
+    flag = 1;
+    setsockopt(fd, SOL_TCP, TCP_NODELAY, &flag, sizeof(flag));
+# endif
+
     sysdelay(SERVER_DELAY);	/* Wait server startup */
 
     if (recv(fd, dummy, 0, 0) == -1) {

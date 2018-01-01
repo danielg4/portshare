@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (C) Cyclades Corporation, 1999-1999. All rights reserved.
+ * Copyright (C) portshare Corporation, 1999-1999. All rights reserved.
  *
  *
  * measure.c
@@ -18,7 +18,7 @@
 
 # define _TSR_MEASURE_
 
-#include "inc/cyclades-ser-cli.h"
+#include "inc/portshare-ser-cli.h"
 #include "inc/system.h"
 #include "inc/tsrmeasure.h"
 

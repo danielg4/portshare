@@ -217,6 +217,8 @@ int CmdState[NUM_COMCMDS];
 
 /* MODEMSTATE MASK (SET-MODEMSTATE-MASK / NOTIFY-MODEMSTATE */
 
+# define MODEM_DTR				512
+# define MODEM_RTS				256
 # define MODEM_DCD				128
 # define MODEM_RI				64
 # define MODEM_DSR				32

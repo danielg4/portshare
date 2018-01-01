@@ -1,17 +1,21 @@
 
 CC=@CC@
-CCFLAGS=@CCFLAGS@ @SOCFLAGS@
+CCFLAGS=@CCFLAGS@ @SOCFLAGS@ @OFLAGS@
 SOLFLAGS=@SOLFLAGS@ @LDFLAGS@ @LIBS@
 
-all: libcyclades-ser-cli.so
+all: libportshare-ser-cli.so
 
 
-libcyclades-ser-cli.so: libcyclades-ser-cli.c
-	$(CC) -c $(CCFLAGS) libcyclades-ser-cli.c -o libcyclades-ser-cli.o
-	$(CC) libcyclades-ser-cli.o $(SOLFLAGS) -o libcyclades-ser-cli.so
+libportshare-ser-cli.so: libportshare-ser-cli.c
+	$(CC) -c $(CCFLAGS) -o libportshare-ser-cli.o libportshare-ser-cli.c 
+	$(CC) $(SOLFLAGS) -o libportshare-ser-cli.so libportshare-ser-cli.o 
+	# NOTE: Calling `ld' directly is bad. However some platforms may
+	#       not implement @SOLFLAGS@ in configure.in properly for the
+	#       C compiler to be able to link a shared library
+	# ld libportshare-ser-cli.o $(SOLFLAGS) -o libportshare-ser-cli.so
 
 clean:
-	rm -f libcyclades-ser-cli.so libcyclades-ser-cli.o depends.bak
+	rm -f libportshare-ser-cli.so libportshare-ser-cli.o depends.bak
 
 dep:
 	-makedepend -Y -f depends *.c 2> /dev/null

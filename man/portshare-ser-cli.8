@@ -1,23 +1,23 @@
-.TH "cyclades-ser-cli" "8" "" "" ""
+.TH "portshare-ser-cli" "8" "" "" ""
 .SH "NAME"
-.BR cyclades-ser-cli
-Serial Port Interface for Cyclades Terminal Servers
+.BR portshare-ser-cli
+Serial Port Interface for remote console servers
 
 .SH "SYNOPSIS"
-.B cyclades-ser-cli
+.B portshare-ser-cli
 .I [options] devname rasname physport
 
 .SH "DESCRIPTION"
-The cyclades-ser-cli program connects a Unix device file 'devname' to a
-physical port 'physport' of a Cyclades Terminal Server 'rasname'.
-cyclades-ser-cli provides the I/O interface between the device file and
+The portshare-ser-cli program connects a Unix device file 'devname' to a
+physical port 'physport' of a remote console server 'rasname'.
+portshare-ser-cli provides the I/O interface between the device file and
 the physical port, running as an 'user\-mode device driver'.
 
 If 'physport' is assigned to 0, then 'rasname' is used as the IP
 address on an IP\-based serial port addressing.
 
 .SH "OPTIONS"
-cyclades-ser-cli may be started with the following options:
+portshare-ser-cli may be started with the following options:
 
 .TP
 .B \-u ptyiosize
@@ -55,8 +55,7 @@ not to hangup.
 
 .TP
 .B \-p start port
-TCP base port of servers at terminal server side (defaults: 31000 for Socket
-server, 30000 for Remote Telnet Server).  Note: if 'physport' is assigned to
+TCP base port of servers at console server side (defaults: 5000 for RFC2217 Server).  Note: if 'physport' is assigned to
 zero, this option has no effect, the Telnet Server standard port (23) is used.
 
 .TP
@@ -72,25 +71,34 @@ Run in foreground, this is suitable for running from init.
 .B \-x
 Console mode: normally all messages are sent to syslogd (using local2
 facility). With this option, all messages will be sent to stdout and
-cyclades-ser-cli runs in the foreground.  This implies
+portshare-ser-cli runs in the foreground.  This implies
 .B \-f
 
+.TP
+.B \-P
+Specify a TCP port to connect to. If this option is present, it will override most other options
+in the /etc/portshare-devices file. portshare-ser-cli will use this TCP port instead of deriving
+it from 
+.B \-p
+and 'physport'. This option is useful when connecting to a local TCP port,
+which is connected to an ssh tunnel.
+
 .SH "USE"
-Every instance of cyclades-ser-cli will have a virtual serial device which is
+Every instance of portshare-ser-cli will have a virtual serial device which is
 a sym-link to a pseudo-tty.  A terminal program can then talk to the virtual
 serial device and it's data transfers will be redirected across the network.
 Each virtual serial device will be accompanied by a Unix domain socket with
-the same name with the addition of ".control".  So if cyclades-ser-cli
+the same name with the addition of ".control".  So if portshare-ser-cli
 provides the virtual device named "/dev/modem" then it will have a control
 socket named "/dev/modem.control".  There is a shared object named
-.B libcyclades-ser-cli.so
+.B libportshare-ser-cli.so
 which intercepts calls to the tcsetattr() and tcsendbreak().  This shared
-object then sends the relevant data to the cyclades-ser-cli server via the
+object then sends the relevant data to the portshare-ser-cli server via the
 control socket.  To recognise a virtual modem device it has to read
-/etc/cyclades-devices.
+/etc/portshare-devices.
 
 .P
-The libcyclades-ser-cli.so shared object can be loaded per-application
+The libportshare-ser-cli.so shared object can be loaded per-application
 through the
 .B LD_PRELOAD
 environment variable, or for the entire system through the system shared
@@ -100,24 +108,24 @@ otherwise an application which changes it's current directory may fail.
 
 .SH "BUGS"
 
-In Solaris libcyclades-ser-cli.so does not work with the stty program.  stty
+In Solaris libportshare-ser-cli.so does not work with the stty program.  stty
 uses a different interface to this and requires some extra coding.
 
-In Solaris libcyclades-ser-cli.so conflicts with some system programs such as
+In Solaris libportshare-ser-cli.so conflicts with some system programs such as
 .B ps
 for unknown reasons.  Just don't load it for those programs, it has no such
 problems with any serial comms programs.
 
 .SH "EXAMPLES"
 Start an interface between /dev/prt1 device and a serial
-port number 10 of a Terminal Server named pr01, without
+port number 10 of a Console Server named pr01, without
 hangup at last close:
 
-cyclades-ser-cli \-c 1 /dev/prt1 pr01 10
+portshare-ser-cli \-c 1 /dev/prt1 pr01 10
 
-In general use do not start cyclades-ser-cli from the command line, start it
-through the cyclades-serial-client script or from init.
+In general use do not start portshare-ser-cli from the command line, start it
+through the portshare-serial-client script or from init.
 
 .SH "SEE ALSO"
-.BR cyclades-serial-client (1),
-.BR cyclades-devices (5)
+.BR portshare-serial-client (1),
+.BR portshare-devices (5)

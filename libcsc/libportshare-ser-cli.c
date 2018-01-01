@@ -32,12 +32,16 @@ typedef int request_t;
 typedef unsigned long int request_t;
 #endif
 
+#ifdef _SCO_DS
+#undef tcsendbreak
+#endif
+
 static void *libc = NULL;
 static int (*real_tcsetattr) (int fd, int optional_actions,
 			      const struct termios * termios_p) = NULL;
 static int (*real_tcsendbreak) (int fd, int duration);
 static int (*real_ioctl) (int, request_t, void *);
-static char *cyclades_devices[MAX_PORTS];
+static char *portshare_devices[MAX_PORTS];
 static int num_devices;
 static int socket_fd = -1;
 static int socket_ind = -1;
@@ -46,7 +50,7 @@ void
 libcsc_init()
 {
     FILE *fp = NULL;
-    char *cyclades_env = NULL;
+    char *portshare_env = NULL;
 
     libc = dlopen(LIBC, RTLD_LAZY | RTLD_GLOBAL);
     if (!libc) {
@@ -59,29 +63,29 @@ libcsc_init()
     real_ioctl = (int (*)(int, request_t, void *)) dlsym(libc, "ioctl");
 
     num_devices = 0;
-    cyclades_env = getenv("CYCLADES_DEVICES");
-    if (cyclades_env) {
+    portshare_env = getenv("portshare_DEVICES");
+    if (portshare_env) {
 	char *next;
-	while (num_devices < MAX_PORTS && cyclades_env && *cyclades_env) {
-	    next = strchr(cyclades_env, ':');
+	while (num_devices < MAX_PORTS && portshare_env && *portshare_env) {
+	    next = strchr(portshare_env, ':');
 	    if (next) {
 		*next = '\0';
 		next++;
 	    }
-	    cyclades_devices[num_devices] = strdup(cyclades_env);
+	    portshare_devices[num_devices] = strdup(portshare_env);
 	    num_devices++;
-	    cyclades_env = next;
+	    portshare_env = next;
 	}
     }
     else
-	fp = fopen("/etc/cyclades-devices", "r");
+	fp = fopen("/etc/portshare-devices", "r");
 
     if (fp) {
 	char str[1024];
 	while (num_devices < MAX_PORTS && fgets(str, sizeof(str), fp)) {
 	    if (str[0] == '/') {
 		strtok(str, ":\r\n");
-		cyclades_devices[num_devices] = strdup(str);
+		portshare_devices[num_devices] = strdup(str);
 		num_devices++;
 	    }
 	}
@@ -118,7 +122,7 @@ open_socket(int ind)
 	return -1;
     addr.sun_family = AF_UNIX;
     snprintf(addr.sun_path, sizeof(addr.sun_path), "%s.control",
-	     cyclades_devices[ind]);
+	     portshare_devices[ind]);
     addr.sun_path[sizeof(addr.sun_path) - 1] = '\0';
     socket_ind = ind;
     if (connect(socket_fd, (const struct sockaddr *) &addr, sizeof(addr))) {
@@ -139,7 +143,7 @@ get_device_ind(int fd)
     if (fstat(fd, &fd_stat))
 	return -1;
     for (i = 0; i < num_devices; i++) {
-	if (!stat(cyclades_devices[i], &device_stat)) {
+	if (!stat(portshare_devices[i], &device_stat)) {
 	    if (device_stat.st_dev == fd_stat.st_dev
 		&& device_stat.st_ino == fd_stat.st_ino)
 		return i;
@@ -162,7 +166,7 @@ send_data(int port_ind, e_operation oper, int val, int extra_timeout)
 	return -1;
     act.sa_handler = SIG_IGN;
     if (sigaction(SIGPIPE, &act, &oldact)) {
-	syslog(LOG_WARNING, "libcyclades-ser-cli: Can't ignore SIGPIPE.");
+	syslog(LOG_WARNING, "libportshare-ser-cli: Can't ignore SIGPIPE.");
 	no_ign_pipe = 1;
     }
 
@@ -173,7 +177,7 @@ send_data(int port_ind, e_operation oper, int val, int extra_timeout)
 	if (!no_ign_pipe) {
 	    if (sigaction(SIGPIPE, &oldact, NULL))
 		syslog(LOG_ERR,
-		       "libcyclades-ser-cli: Can't reset SIGPIPE handler.");
+		       "libportshare-ser-cli: Can't reset SIGPIPE handler.");
 	}
 	close_socket();
 	return -1;
@@ -189,7 +193,7 @@ send_data(int port_ind, e_operation oper, int val, int extra_timeout)
 	if (!no_ign_pipe) {
 	    if (sigaction(SIGPIPE, &oldact, NULL))
 		syslog(LOG_ERR,
-		       "libcyclades-ser-cli: Can't reset SIGPIPE handler.");
+		       "libportshare-ser-cli: Can't reset SIGPIPE handler.");
 	}
 	close_socket();
 	return -1;
@@ -198,13 +202,73 @@ send_data(int port_ind, e_operation oper, int val, int extra_timeout)
     if (!no_ign_pipe) {
 	if (sigaction(SIGPIPE, &oldact, NULL))
 	    syslog(LOG_ERR,
-		   "libcyclades-ser-cli: Can't reset SIGPIPE handler.");
+		   "libportshare-ser-cli: Can't reset SIGPIPE handler.");
     }
     if (rc != sizeof(s) || s.val != val || s.oper != oper
 	|| s.size != sizeof(s)) {
 	close_socket();
 	return -1;
     }
+    return 0;
+}
+
+static int
+get_data(int port_ind, e_operation oper, int *val, int extra_timeout)
+{
+    fd_set readfds, exceptfds;
+    struct timeval timeout;
+    s_control s;
+    struct sigaction act, oldact;
+    int rc;
+    int no_ign_pipe = 0;
+
+    if (open_socket(port_ind) == -1)
+	return -1;
+    act.sa_handler = SIG_IGN;
+    if (sigaction(SIGPIPE, &act, &oldact)) {
+	syslog(LOG_WARNING, "libportshare-ser-cli: Can't ignore SIGPIPE.");
+	no_ign_pipe = 1;
+    }
+
+    s.oper = oper;
+    s.val = *val;
+    s.size = sizeof(s_control);
+    if (send(socket_fd, &s, sizeof(s_control), 0) != sizeof(s_control)) {
+	if (!no_ign_pipe) {
+	    if (sigaction(SIGPIPE, &oldact, NULL))
+		syslog(LOG_ERR,
+		       "libportshare-ser-cli: Can't reset SIGPIPE handler.");
+	}
+	close_socket();
+	return -1;
+    }
+    FD_ZERO(&readfds);
+    FD_SET(socket_fd, &readfds);
+    FD_ZERO(&exceptfds);
+    FD_SET(socket_fd, &exceptfds);
+    timeout.tv_sec = extra_timeout + 2;
+    timeout.tv_usec = 0;
+    if (select(socket_fd + 1, &readfds, NULL, &exceptfds, &timeout) != 1
+	|| FD_ISSET(socket_fd, &exceptfds)) {
+	if (!no_ign_pipe) {
+	    if (sigaction(SIGPIPE, &oldact, NULL))
+		syslog(LOG_ERR,
+		       "libportshare-ser-cli: Can't reset SIGPIPE handler.");
+	}
+	close_socket();
+	return -1;
+    }
+    rc = recv(socket_fd, &s, sizeof(s), MSG_WAITALL);
+    if (!no_ign_pipe) {
+	if (sigaction(SIGPIPE, &oldact, NULL))
+	    syslog(LOG_ERR,
+		   "libportshare-ser-cli: Can't reset SIGPIPE handler.");
+    }
+    if (rc != sizeof(s) || s.oper != oper || s.size != sizeof(s)) {
+	close_socket();
+	return -1;
+    }
+    *val = s.val;
     return 0;
 }
 
@@ -410,7 +474,11 @@ tcsendbreak(int fd, int duration)
 }
 
 int
+#ifdef _SCO_DS
+ioctl(int fd, int request, ...)
+#else
 ioctl(int fd, request_t request, ...)
+#endif
 {
     va_list args;
     void *argp;
@@ -449,7 +517,7 @@ ioctl(int fd, request_t request, ...)
     case TIOCMGET:
 	/* FIXME: Implement. To be able to get the modem bits, we need
 	   to make the control connection bidirectional */
-	fprintf(stderr, "libcyclades-ser-cli: TIOCMGET not implemented\n");
+	fprintf(stderr, "libportshare-ser-cli: TIOCMGET not implemented\n");
 	errno = ENOSYS;
 	return -1;
 

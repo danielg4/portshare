@@ -1,0 +1,60 @@
+
+This is the portshare unix serial client.
+
+1) Build and install the package (as root):
+
+$ ./configure && make && make install
+
+Note that the `--prefix=' option is ignored by configure.
+
+2) Configure the devices by editing /etc/portshare-devices.  There are sample 
+   configurations in there, and the format is documented at the top of the 
+   file, or in the portshare-devices man page.
+
+3) Start the portshare devices:
+     /usr/local/sbin/portshare-serial-client start
+   (man portshare-serial-client for more information)
+
+Useful commands:
+
+portshare-stty
+  Used like 'stty', but applies the settings to the remote serial port
+  correctly.  A normal stty on /dev/ottyXX will not set the parameters
+  on the port correctly, since it is just a pseudo-tty.
+
+  Instead of using $ stty -F /dev/otty01 speed 9600
+  use: $ /usr/local/bin/portshare-stty -F /dev/otty01 speed 9600
+
+  portshare-stty will automatically assign the libportshare-ser-cli.so
+  library to the LD_PRELOAD environment variable, and then execute 
+  normal stty. See below.
+
+
+Caveats.
+    The local unix tty devices setup are just symlinks to pseudo-tty
+  devices, so settings on those devices do not get set on the Console
+  Server.  To do this, use 'portshare-stty'.  
+
+    This also means that applications that rely on setting tty parameters 
+  such as baud rate, modem signals, etc will not work unless they are
+  started with the the libportshare-ser-cli.so library preloaded.
+  e.g.
+	LD_PRELOAD=/usr/local/lib/libportshare-ser-cli.so stty -a < /dev/otty01
+
+
+  Use /usr/local/sbin/portshare-stty as a template for running your application 
+  with the library preloaded.
+
+  e.g. We want to run cu with a baud rate of 38400 on virtual port otty01 with
+  even parity:
+
+  Option 1) explicitly preload the library:
+	$ LD_PRELOAD=/usr/local/lib/libportshare-ser-cli.so cu -l /dev/otty01 -s 38400 -e
+  Option 2)
+	Write a cript similar to /usr/local/sbin/portshare-stty which will set LD_PRELOAD
+	and 'exec' cu with its parameters.
+	Then all we have to do is run this script:
+	$ <path to script>/scriptname -l /dev/otty01 -s 38400 -e
+
+
+

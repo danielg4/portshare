@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (C) Cyclades Corporation, 1999-1999. All rights reserved.
+ * Copyright (C) portshare Corporation, 1999-1999. All rights reserved.
  *
  *
  * misc.c
@@ -20,7 +20,7 @@
 #endif
 
 #define _TSR_MISC_
-#include "inc/cyclades-ser-cli.h"
+#include "inc/portshare-ser-cli.h"
 #include "inc/system.h"
 #include "inc/tsrio.h"
 #include "inc/telnet.h"
@@ -205,6 +205,17 @@ external_poll(int eventmask, int timeout)
 /* BUG we need to maintain com port state here as well because one field is
  * used for several things in the protocol
  *          s.val = Comport.portconfig.flowc; */
+			if (s.val == COM_DTR_ON)
+				Comport.portstate.modemstate |= MODEM_DTR;
+			if (s.val == COM_DTR_OFF)
+				Comport.portstate.modemstate &= ~MODEM_DTR;
+			if (s.val == COM_RTS_ON)
+				Comport.portstate.modemstate |= MODEM_RTS;
+			if (s.val == COM_RTS_OFF)
+				Comport.portstate.modemstate &= ~MODEM_RTS;
+			break;
+		    case eGET_MODEM:
+			s.val = Comport.portstate.modemstate;
 			break;
 		    }		/* end switch */
 		    if (send(P_contr[i], &s, sizeof(s), 0) != sizeof(s)) {

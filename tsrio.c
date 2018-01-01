@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (C) Cyclades Corporation, 1999-1999. All rights reserved.
+ * Copyright (C) portshare Corporation, 1999-1999. All rights reserved.
  *
  *
  * tsrio.c
@@ -20,7 +20,7 @@
 
 #define _TSR_TSRIO_
 
-#include "inc/cyclades-ser-cli.h"
+#include "inc/portshare-ser-cli.h"
 #include "inc/system.h"
 #include "inc/tsrio.h"
 #include "inc/telnet.h"
@@ -997,6 +997,7 @@ do_ptyopen(void)
 {
     print_action("do_ptyopen");
     PTY_SETSTATE("do_ptyopen", PTY_OPENING);
+    Pty.comport->portstate.modemstate |= MODEM_RTS;
     do_nvtdtron();		/* Sched */
 }
 
@@ -1380,6 +1381,7 @@ do_nvtdtron(void)
     case NVT_OPER:
     case NVT_WAITPTYWR:
 	tel_putcmd(USR_COM_SET_CONTROL, COM_DTR_ON);
+	Pty.comport->portstate.modemstate |= MODEM_DTR;
 	if (Nvt.state == NVT_OPER) {
 	    NVT_SETSTATE("do_nvtdtron", NVT_WAITRASCM);
 	}
@@ -1402,6 +1404,7 @@ do_nvtdtroff(void)
     case NVT_OPER:
     case NVT_WAITPTYWR:
 	tel_putcmd(USR_COM_SET_CONTROL, COM_DTR_OFF);
+	Pty.comport->portstate.modemstate &= ~MODEM_DTR;
 	if (Nvt.state == NVT_OPER) {
 	    NVT_SETSTATE("do_nvtdtroff", NVT_WAITRASCM);
 	}

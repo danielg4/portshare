@@ -1,5 +1,5 @@
 #
-# Copyright (C) Cyclades Corporation, 1999-1999. All rights reserved.
+# Copyright (C) portshare Corporation, 1999-1999. All rights reserved.
 #
 
 OFLAGS=@OFLAGS@
@@ -18,10 +18,12 @@ DFLAGS=
 CCFLAGS=@CCFLAGS@
 
 #
-# cyclades-ser-cli program flags
+# portshare-ser-cli program flags
 #
 SOCKFLAGS=$(OFLAGS) $(DFLAGS) $(CCFLAGS)
 
+#LIBCSC=@LIBCSC@
+LIBCSC=libcsc/libportshare-ser-cli.so
 
 #
 # Link-editor flags
@@ -33,47 +35,50 @@ LDFLAGS=-s @LDFLAGS@
 # Standard libraries
 #
 LDLIBS=@LIBS@
-AUXLIBS=@AUXLIBS@
 
 #
 # Object files
 #
-SOCKOBJS=cyclades-ser-cli.o tsrio.o telnet.o sock.o @DEV_OBJ@ misc.o system.o measure.o
+SOCKOBJS=portshare-ser-cli.o tsrio.o telnet.o sock.o @DEV_OBJ@ misc.o system.o measure.o
 
 #
 # Programs for terminal server interface
 #
-PROGS=cyclades-ser-cli
+PROGS=portshare-ser-cli
 
+prefix = @prefix@
 
-all: $(PROGS) libcsc/libcyclades-ser-cli.so
+all: $(PROGS) build_libcsc
 
 clean:
 	rm -f $(PROGS) *.o depends.bak
 	( cd libcsc ; $(MAKE) clean )
 
-libcsc/libcyclades-ser-cli.so:
-	( cd libcsc ; $(MAKE) )
+build_libcsc::
+	if [ ! -z "$(LIBCSC)" ]; then cd libcsc ; $(MAKE); fi
 
 distclean: clean
 	rm -f config.status
 
 
-cyclades-ser-cli: $(SOCKOBJS)
-	$(CC) $(LDFLAGS) -o cyclades-ser-cli $(SOCKOBJS) $(AUXLIBS) $(LDLIBS)
+portshare-ser-cli: $(SOCKOBJS)
+	$(CC) $(LDFLAGS) -o portshare-ser-cli $(SOCKOBJS) $(AUXLIBS) $(LDLIBS)
 
-install: cyclades-ser-cli libcsc/libcyclades-ser-cli.so
-	mkdir -p $(prefix)/usr/lib $(prefix)/usr/sbin $(prefix)/etc
-	cp cyclades-serial-client cyclades-ser-cli $(prefix)/usr/sbin
-	cp libcsc/libcyclades-ser-cli.so $(prefix)/usr/lib
-	cp -i cyclades-devices $(prefix)/etc
-	mkdir -p $(prefix)/usr/share/man/man5
-	mkdir -p $(prefix)/usr/share/man/man8
-	cp man/*.5 $(prefix)/usr/share/man/man5
-	cp man/*.8 $(prefix)/usr/share/man/man8
+install: portshare-ser-cli $(LIBCSC)
+	mkdir -p $(prefix)/lib $(prefix)/sbin /etc
+	cp -p portshare-serial-client portshare-ser-cli $(prefix)/sbin
+	cp -p portshare-stty $(prefix)/sbin
+	if [ ! -z "$(LIBCSC)" ]; then \
+		cp -p $(LIBCSC) $(prefix)/lib; \
+	fi
+	cp -pi portshare-devices /etc
+	mkdir -p $(prefix)/share/man/man5
+	mkdir -p $(prefix)/share/man/man8
+	cp man/*.5 $(prefix)/share/man/man5
+	cp man/*.8 $(prefix)/share/man/man8
 
 
-%.o: %.c
+.c.o:
 	$(CC) $(SOCKFLAGS) -c $<
 
 dep:

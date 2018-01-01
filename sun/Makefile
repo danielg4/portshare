@@ -2,7 +2,7 @@
 all: pkg
 
 INSTROOT=`pwd`/tmp
-PKGNAME=cyclades-ser-cli
+PKGNAME=portshare-ser-cli
 
 pkg:
 	rm -rf ../tmp

@@ -1,35 +1,37 @@
 #
-# TSRDEV - Serial Port Interface for Cyclades Terminal Servers
-# tsrdevices - Device to serial port mapping
+# /etc/portshare-devices
 #
 #	Entry Syntax:
 #
-# 	devname:rastype:rasname:physport:type:options
+# 	devname:cmtype:cmname:physport:type:options
 #
 #	where :
 #	devname  -> Device full pathname 
-#	rastype	 -> Terminal server type (path or prts)
-#	rasname	 -> Terminal server host name
-#	physport -> Physical port (0 => rasname = IP-based addressing)
-#	type     -> Server type : rtelnet or socket
+#	rastype	 -> Console Server type (cm4008 or CM4116 or CM4148)
+#	rasname	 -> Console Server host name or IP address
+#	physport -> Physical port number on Console Server
+#	type     -> Server type : rfc2217 or socket (raw TCP)
 #	opts     -> per-port interface options (optional)
 #
-# Ex1 : Device on a PR3020 Terminal Server pr3k Port 1, accessed through
-#	/dev/ctty01 device, using telnet protocol (remote telnet server)
+#       To connect via a secure ssh tunnel, use the '-P' parameter as part 
+#       of "opts", and give the TCP port number used for the local end of
+#       the tunnel.  e.g. "-P 22222" will attempt to connect to local TCP
+#	port 22222. Also set the rasname to "localhost". Note: The ssh tunnel
+# 	must already be setup for this to work. 
+
+# Example 1: Connect to port 1 on a 48 port Console Server
+# at IP address 10.111.254.1, using RFC2217
+#/dev/otty01:cm4148:10.111.254.1:1:rfc2217
+
+# Example 2: Connect to port 8 on a 8 port Console Server
+# at IP address 10.111.254.2, using RFC2217
+#/dev/otty02:cm4008:10.111.254.2:8:rfc2217
+
+# Example 3: Create an ssh tunnel from localhost to an remote console
+# server. This tunnel connects to serial port 3 on the console manager.
+# and uses rfc2217. The rfc2217 TCP port base on the remote console server is set 
+# to 9000. The local TCP port used for the tunnel is 12345.
+# ssh -L 12345:10.111.254.3:9003 <username>@10.111.254.3 -N
 #
-#/dev/ctty01:prts:pr3k:1:rtelnet:
-#
-# Ex2 : The same device, but with an IP address pr3k_port1 associated to the
-# serial port
-#
-#/dev/ctty01:prts:pr3k_port1:0:rtelnet:
-#
-# Ex3 : Device on a PathRAS Terminal Server pras Port 2, accessed through
-#	/dev/ctty02 device, using socket protocol (socket server)
-#
-#/dev/ctty02:path:pras:2:socket:
-# for Linux
-/dev/modem:path:localhost:1:socket:
-#
-# for AIX
-#/dev/prt1:pr:1:rtelnet:
+# Now use this tunnel to make the connection:
+#/dev/otty03:cm4008:localhost:3:rfc2217:-P 12345

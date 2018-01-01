@@ -1,5 +1,5 @@
-Summary: Serial Port Interface for Cyclades Terminal Servers
-Name: cyclades-serial-client
+Summary: Serial Port Interface for remote console servers
+Name: portshare-serial-client
 Version: @version@
 Release: 1
 Copyright: GPL
@@ -12,7 +12,7 @@ Requires: glibc >= 2.1
 Requires: perl >= 5.0
 BuildRequires: glibc-devel >= 2.1
 
-source0: cyclades-serial-client_@version@.tar.gz
+source0: portshare-serial-client_@version@.tar.gz
 
 %description
 This package connects a pseudo-tty on a local system to a remote serial port.
@@ -33,22 +33,22 @@ mkdir -p $DESTDIR/usr/sbin
 mkdir -p $DESTDIR%{_mandir}/man{5,8}
 mkdir -p $DESTDIR/etc
 
-install -c -m 644 cyclades-devices $DESTDIR/etc
-install -c -m 755 cyclades-ser-cli cyclades-serial-client $DESTDIR/usr/sbin
-install -c -m 644 man/cyclades-ser-cli.8 man/cyclades-serial-client.8 $DESTDIR%{_mandir}/man8
-install -c -m 644 man/cyclades-devices.5 $DESTDIR%{_mandir}/man5
+install -c -m 644 portshare-devices $DESTDIR/etc
+install -c -m 755 portshare-ser-cli portshare-serial-client $DESTDIR/usr/sbin
+install -c -m 644 man/portshare-ser-cli.8 man/portshare-serial-client.8 $DESTDIR%{_mandir}/man8
+install -c -m 644 man/portshare-devices.5 $DESTDIR%{_mandir}/man5
 
 %clean
 rm -rf $RPM_BUILD_ROOT
 
 %files
 %defattr(-,root,root)
-/etc/cyclades-devices
-/usr/sbin/cyclades-ser-cli
-/usr/sbin/cyclades-serial-client
-%{_mandir}/man8/cyclades-ser-cli.8.gz
-%{_mandir}/man8/cyclades-serial-client.8.gz
-%{_mandir}/man5/cyclades-devices.5.gz
+/etc/portshare-devices
+/usr/sbin/portshare-ser-cli
+/usr/sbin/portshare-serial-client
+%{_mandir}/man8/portshare-ser-cli.8.gz
+%{_mandir}/man8/portshare-serial-client.8.gz
+%{_mandir}/man5/portshare-devices.5.gz
 
 %changelog
 * Wed Oct 30 2002 Russell Coker <russell@coker.com.au>

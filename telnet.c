@@ -1,6 +1,6 @@
 /*
  *
- * Copyright (C) Cyclades Corporation, 1999-1999. All rights reserved.
+ * Copyright (C) portshare Corporation, 1999-1999. All rights reserved.
  *
  *
  * telnet.c
@@ -20,7 +20,7 @@
 
 #define _TSR_TELNET_
 
-#include "inc/cyclades-ser-cli.h"
+#include "inc/portshare-ser-cli.h"
 #include "inc/system.h"
 #include "inc/tsrio.h"
 #include "inc/telnet.h"
@@ -492,7 +492,7 @@ comport_config(void)
     sync_comport_command(USR_COM_SET_CONTROL, COM_FLOW_REQ);
 
     /* Set port events mask */
-    mask = MODEM_DCD;
+    mask = MODEM_DCD | MODEM_CTS;
     sync_comport_command(USR_COM_SET_MODEMSTATE_MASK, mask);
     mask = LINE_BREAK_ERROR | LINE_PARITY_ERROR;
     sync_comport_command(USR_COM_SET_LINESTATE_MASK, mask);
@@ -682,7 +682,8 @@ handle_com_port_command(unsigned char *buf)
 		SET_EVENT(EV_RN, EV_RNNTFY, &notify, sizeof(int));
 	    }
 	}
-	Comport.portstate.modemstate = cmdarg;
+	Comport.portstate.modemstate &= ~0xff;
+	Comport.portstate.modemstate |= (cmdarg & 0xff);
 	print_modemstate(cmdarg);
 	break;
 
@@ -902,6 +903,12 @@ print_modemstate(int state)
 	char modemstates[256];
 	modemstates[0] = 0;
 
+	if (state & MODEM_DTR) {
+	    strcat(modemstates, "MODEM_DTR ");
+	}
+	if (state & MODEM_RTS) {
+	    strcat(modemstates, "MODEM_RTS ");
+	}
 	if (state & MODEM_DCD) {
 	    strcat(modemstates, "MODEM_DCD ");
 	}

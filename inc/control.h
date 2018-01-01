@@ -6,7 +6,8 @@ typedef enum
   eSET_CSIZE,
   eSET_PARITY,
   eSET_STOPSIZE,
-  eSET_CONTROL
+  eSET_CONTROL,
+  eGET_MODEM,
 } e_operation;
 
 typedef struct

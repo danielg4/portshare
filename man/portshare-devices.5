@@ -1,11 +1,11 @@
-.TH "cyclades-devices" "5" "" "" ""
+.TH "portshare-devices" "5" "" "" ""
 .SH "NAME"
-cyclades-devices \- tables for driving cyclades-serial-client
+portshare-devices \- tables for driving portshare-serial-client
 
 .SH "DESCRIPTION"
-The cyclades-devices file supplies all mapping between Unix device
+The portshare-devices file supplies all mapping between Unix device
 files (/dev/*) and the addresses of serial ports of
-Cyclades Terminal Servers. It contains one entry for each serial
+Opengear Console Servers. It contains one entry for each serial
 port, with the following format:
 
 device:rastype:rasname:physport:type:options
@@ -21,7 +21,7 @@ the serial port. It must start with  a "/dev/" preffix.
 Two naming schemes may be used here:
 \- devname does not exist, and will be linked to
 a free pseudo\-tty. This is the default behavior of
-cyclades-ser-cli.
+portshare-ser-cli.
 \- devname is the name of a valid slave pseudo\-tty.
 In this case, the '\-t 1' option must be assigned
 in options field.
@@ -29,18 +29,29 @@ in options field.
 
 .TP 
 .B rastype
-\- Terminal Server type:
-\- prts, for Cyclades Pr302X/TS Terminal Servers.
-\- path, for Cyclades PathRAS Terminal Server.
+\- Console Server type:
+\- cm4001, for Opengear CM4001 Console Servers.
+\- cm4008, for Opengear CM4008 Console Servers.
+\- cm4116, for Opengear CM4116 Console Servers.
+\- cm4148, for Opengear CM4148 Console Servers.
+\- sd4002, for Opengear SD4002 Console Servers.
+\- sd4008, for Opengear SD4008 Console Servers.
+\- im4208, for Opengear IM4208 Console Servers.
+\- im4216, for Opengear IM4216 Console Servers.
+\- im4248, for Opengear IM4248 Console Servers.
+\- img4004, for Opengear IMG4004 Console Servers.
+\- acm5002, for Opengear ACM5002 Console Servers.
+\- acm5003, for Opengear ACM5003 Console Servers.
+\- acm5004, for Opengear ACM5004 Console Servers.
 
 .TP 
 .B rasname
-\- Host Name or IP Address of the Terminal Server where
+\- Host Name or IP Address of the Console Server where
 the serial port resides.
 
 .TP 
 .B physport
-\- Number of physical port in the Terminal Server. If
+\- Number of physical port in the Console Server. If
 'physport' is  assigned to zero, 'rasname' will be
 treated as the IP address associated with this port,
 in a IP\-based addressing scheme.
@@ -49,34 +60,37 @@ in a IP\-based addressing scheme.
 .B type	
 \- Server type that will be contacted to handle the
 serial port:
+\- rfc2217, for RFC2217 serial support
 \- rtelnet, for Remote Telnet Server
-\- socket, for Socket Server
+\- socket, for Raw TCP Socket Server
 
 .TP 
 .B options
-\- Per\-port specific options, passed to cyclades-ser-cli program.
+\- Per\-port specific options, passed to portshare-ser-cli program.
+
+.SH "Secure SSH connections"
+
+To connect via a secure ssh tunnel, use the '-P' parameter as part
+of "opts", and give the TCP port number used for the local end of
+the tunnel.  e.g. "-P 22222" will attempt to connect to local TCP
+port 22222. Also set the rasname to "localhost". Note: The ssh tunnel
+must already be setup for this to work.
+
 
 .SH "EXAMPLES"
-1. Device on a PR3020/TS Terminal Server pr3k Port 1, accessed
-through /dev/ctty01 device file name, using telnet protocol
-(remote telnet server)
+1. Device on a CM4008 Console Server 192.168.0.1 Port 1, accessed
+through /dev/otty01 device file name, using RFC2217 protocol.
 
-/dev/ctty01:prts:pr3k:1:rtelnet:
+/dev/otty01:cm4008:192.168.0.1:1:rfc2217:
 
-2. The same device, but with an IP address pr3k_port1
-associated to the serial port (IP\-based port addressing)
+2. Device on a CM4148 Console Server 192.168.0.2 Port 2, accessed
+through /dev/otty02 device file name, using RFC2217 protocol
 
-/dev/ctty01:prts:pr3k_port1:0:rtelnet:
-
-3. Device on a PathRAS Terminal Server pr3k Port 2, accessed
-through /dev/ctty02 device file name, using socket protocol
-(socket server)
-
-/dev/ctty02:path:pr3k:2:socket:
+/dev/otty02:cm4148:192.168.0.2:2:rfc2217:
 
 .SH "FILES"
-/etc/cyclades-devices	This file
+/etc/portshare-devices	This file
 
 .SH "SEE ALSO"
-.BR cyclades-serial-client (1),
-.BR cyclades-ser-cli (1)
+.BR portshare-serial-client (1),
+.BR portshare-ser-cli (1)

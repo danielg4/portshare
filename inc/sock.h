@@ -18,7 +18,7 @@
 # define EXTERN extern
 # endif
 
-EXTERN int	sock_getaddr (char *host, int base, int physport);
+EXTERN int	sock_getaddr (char *host, int tcpport);
 EXTERN int	sock_link(int iosize);
 EXTERN int	sock_unlink(void);
 EXTERN int	sock_write (unsigned char *buf, int n);

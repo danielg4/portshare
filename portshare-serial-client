@@ -1,16 +1,17 @@
 #!/bin/sh
 # chkconfig: 235 55 45
-# description:
-# description: cyclades-serial-client script controls the interfaces of \
-#              the physical ports of Cyclades Terminal Servers
+# description: portshare-serial-client script controls the interfaces of \
+#              the physical ports of Remote serial ports
 
 BASE=/etc
-DEVS=${BASE}/cyclades-devices
+DEVS=${BASE}/portshare-devices
 BACKVARS=${BASE}/backvars$$
 FOUND=0
 BACKEXIT=0
 DEV=all
 GLOBALOPTS=""
+# Make sure $PREFIX/sbin is in the path
+PATH=`dirname $0`:$PATH
 
 export DEV DEVS FOUND BACKEXIT BACKVARS PATH
 
@@ -24,7 +25,7 @@ clean()
 
 if [ $# -lt 1 -o $# -gt 2 ]
 then
-	echo "Usage : cyclades-serial-client (start|stop|restart|status) [device]"
+	echo "Usage : portshare-serial-client (start|stop|restart|status) [device]"
 	exit 2
 fi
 
@@ -35,18 +36,18 @@ then
 fi
 case $OPTION in
 start_msg)
-	echo "Starting Cyclades Terminal Servers Interface"
+	echo "Starting Portshare serial client"
 	exit 0
 	;;
 stop_msg)
-	echo "Stopping Cyclades Terminal Servers Interface"
+	echo "Stopping Portshare serial client"
 	exit 0
 	;;
 esac
 
 if [ ! -f ${DEVS} ]
 then
-	echo "cyclades-serial-client : device table not found"
+	echo "portshare-serial-client : device table not found"
 	exit 1
 fi
 
@@ -70,7 +71,7 @@ do
 
 	if [ -z "${devc}" -o -z "${serv}" -o -z "${host}" -o -z "${port}" ]
 	then
-		echo "cyclades-serial-client : Bad device table line"
+		echo "portshare-serial-client : Bad device table line"
 		BACKEXIT=3
 		echo "BACKEXIT=${BACKEXIT}" >> ${BACKVARS} 	
 		exit ${BACKEXIT}
@@ -106,40 +107,46 @@ do
 	rfc2217) 
 		devst="${devc} (rfc2217 at ${host}:${port})"
 		case ${serv} in
-		opengear|cm400?|cm41??)
+		opengear|cm400?|cm41??|sd400?|im42??|img4004|acm500?)
 			opts="-p 5000 $opts"
 			;;
 		esac
 		;;
 	*)
-		echo "tsrport : Bad device table line"
-		BACKEXIT=2
-		echo "BACKEXIT=${BACKEXIT}" >> ${BACKVARS} 	
-		exit ${BACKEXIT}
+		case ${serv} in
+		opengear|cm400?|cm41??|sd400?|im42??|img4004|acm500?)
+			opts="-p 5000 $opts"
+			;;
+		*) echo "tsrport : Bad device table line"
+		    BACKEXIT=2
+		    echo "BACKEXIT=${BACKEXIT}" >> ${BACKVARS} 	
+		    exit ${BACKEXIT}
+		    ;;
+		esac
 		;;
 	esac
 
 if [ `uname` = "Linux" ]; then
-	ppid=`ps ax | grep cyclades-ser-cli | grep "${devc} " | awk '{print $1}'`
+	ppid=`ps ax | grep portshare-ser-cli | grep "${devc} " | awk '{print $1}'`
 else
-	ppid=`ps -ef | grep cyclades-ser-cli | grep "${devc} " | awk '{print $2}'`
+	ppid=`ps -ef | grep portshare-ser-cli | grep "${devc} " | awk '{print $2}'`
 fi
 
 	case ${OPTION} in
 	"start")
 		if [ -n "${ppid}" ]
 		then
-			echo "cyclades-serial-client : ${devc} already active"
+			echo "portshare-serial-client : ${devc} already active"
 			continue
 		fi
 		echo "Starting ${devc} <<==>> ${host}:${port} interface"
-		cyclades-ser-cli ${opts} ${devc} ${host} ${port}
+		portshare-ser-cli ${opts} ${devc} ${host} ${port}
 		sleep 1
 		;;
 	"stop")
 		if [ -z "${ppid}" ]
 		then
-			echo "cyclades-serial-client : ${devc} already inactive"
+			echo "portshare-serial-client : ${devc} already inactive"
 			continue
 		fi
 		echo "Stopping ${devc} <<==>> ${host}:${port} interface"
@@ -148,9 +155,9 @@ fi
 	"restart")
 		if [ -z "${ppid}" ]
 		then
-			echo "cyclades-serial-client : ${devc} is inactive"
+			echo "portshare-serial-client : ${devc} is inactive"
 			echo "Starting ${devc} <<==>> ${host}:${port} interface"
-			cyclades-ser-cli ${opts} ${devc} ${host} ${port}
+			portshare-ser-cli ${opts} ${devc} ${host} ${port}
 			sleep 1
 		else
 			echo \
@@ -168,7 +175,7 @@ fi
 		echo ${devst}
 		;;
 	*)
-		echo "Usage : cyclades-serial-client (start|stop|restart|status) [device]"
+		echo "Usage : portshare-serial-client (start|stop|restart|status) [device]"
 		BACKEXIT=2
 		echo "BACKEXIT=${BACKEXIT}" >> ${BACKVARS} 	
 		exit ${BACKEXIT}
@@ -189,7 +196,7 @@ fi
 
 if [ "${DEV}" != "all" -a $FOUND -eq 0 ]
 then
-	echo "cyclades-serial-client : device ${DEV} does not exist"
+	echo "portshare-serial-client : device ${DEV} does not exist"
 	exit 3
 fi
 exit 0

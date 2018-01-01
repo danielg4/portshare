@@ -58,8 +58,8 @@ install: build
 	dh_clean -k
 	dh_installdirs
 
-	# Add here commands to install the package into debian/cyclades-serial-client.
-	$(MAKE) install prefix=$(CURDIR)/debian/cyclades-serial-client
+	# Add here commands to install the package into debian/portshare-serial-client.
+	$(MAKE) install prefix=$(CURDIR)/debian/portshare-serial-client
 
 
 # Build architecture-independent files here.

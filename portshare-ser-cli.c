@@ -1,10 +1,10 @@
 /*
  *
- * Copyright (C) Cyclades Corporation, 1999-1999. All rights reserved.
+ * Copyright (C) portshare Corporation, 1999-1999. All rights reserved.
  *
  *
  * tsrsock.c
- * cyclades-ser-cli main code
+ * portshare-ser-cli main code
  *
  * History
  * 08/17/1999 V.1.0.0 Initial revision
@@ -26,7 +26,7 @@
 
 # define _TSR_TSRSOCK_
 
-#include "inc/cyclades-ser-cli.h"
+#include "inc/portshare-ser-cli.h"
 #include "inc/system.h"
 #include "inc/tsrio.h"
 #include "inc/sock.h"
@@ -44,7 +44,7 @@ int P_contr[MAX_CONTROL_SOCKS], P_contr_listen;
  */
 
 static const char *const Version =
-    "cyclades-ser-cli " TSRDEV_VERSION " " TSRDEV_DATE;
+    "portshare-ser-cli " TSRDEV_VERSION " " TSRDEV_DATE;
 
 /*
  * Internal Functions
@@ -73,6 +73,7 @@ main(int argc, char **argv)
     int devmodem;
     int closemode;
     int baseport;
+    int tcpport;
     struct sockaddr_un control_addr;
     struct sigaction act;
     struct stat stat_buf;
@@ -89,6 +90,7 @@ main(int argc, char **argv)
     devmodem = DEV_MODEM;
     closemode = CLOSE_HANG;
     baseport = 0;
+    tcpport = 0;
 
     Console = FALSE;
     Foreground = FALSE;
@@ -97,7 +99,7 @@ main(int argc, char **argv)
     Pgname = argv[0];
     Debug = 0;
 
-    while ((opt = getopt(argc, argv, "u:n:r:fi:st:m:c:p:d:xvhHl:")) != EOF) {
+    while ((opt = getopt(argc, argv, "u:n:r:fi:st:m:c:p:d:P:xvhHl:")) != EOF) {
 	switch (opt) {
 	case 'u':
 	    ptyiosize = atoi(optarg);
@@ -146,6 +148,9 @@ main(int argc, char **argv)
 	    exit(E_NORMAL);
 	case 'l':
 	    LogFile = strdup(optarg);
+	    break;
+	case 'P':
+	    tcpport = atoi(optarg);
 	    break;
 	case 'h':
 	case 'H':
@@ -218,7 +223,10 @@ main(int argc, char **argv)
 	    P_contr[i] = -1;
     }
 
-    if ((retst = sock_getaddr(rasname, baseport, physport)) != E_NORMAL)
+    if(!tcpport){
+	tcpport = baseport + physport;
+    }
+    if ((retst = sock_getaddr(rasname, tcpport)) != E_NORMAL)
 	exit(retst);
 
 
@@ -268,13 +276,13 @@ static void
 helpmsg(void)
 {
     fprintf(stderr,
-	    "Usage: cyclades-ser-cli [options] devname rasname physport\n");
+	    "Usage: portshare-ser-cli [options] devname rasname physport\n");
     fprintf(stderr, "\toptions:\n");
     fprintf(stderr, "\t\t[-h] [-v] [-x]\n");
     fprintf(stderr, "\t\t[-u ptyiosize]  [-n netiosize] [-i retrydelay]\n");
     fprintf(stderr, "\t\t[-r numretries] [-t devtype]   [-s servertype]\n");
     fprintf(stderr, "\t\t[-m devmodem]   [-c closemode] [-p startport]\n");
-    fprintf(stderr, "\t\t[-d deblevel]\n");
+    fprintf(stderr, "\t\t[-d deblevel]   [-P TCPport]\n");
     fprintf(stderr, "\t\t[-l logfile]\n");
 }
 
